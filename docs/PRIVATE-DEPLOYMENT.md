@@ -2,6 +2,12 @@
 
 当前尚没有可交付的公网应用地址。云环境内部路径不能作为下载附件或外网网址。本文件准备部署步骤，不表示已完成部署。
 
+## 从最新版开始发布
+
+[打开Vercel发布向导](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FFion37%2FCODEX7%2Ftree%2Fcodex%2Fielts-study-os-v1&project-name=ielts-study-os&repository-name=ielts-study-os&env=APP_PRIVATE_MODE%2CAPP_OWNER_EMAIL%2CNEXT_PUBLIC_SUPABASE_URL%2CNEXT_PUBLIC_SUPABASE_ANON_KEY&envDescription=Keep%20APP_PRIVATE_MODE%3Dtrue.%20Configure%20your%20verified%20owner%20email%20and%20Supabase%20public%20client%20settings.%20Never%20use%20a%20service-role%20key.&envLink=https%3A%2F%2Fgithub.com%2FFion37%2FCODEX7%2Fblob%2Fcodex%2Fielts-study-os-v1%2Fdocs%2FPRIVATE-DEPLOYMENT.md)。入口指向应用分支`codex/ielts-study-os-v1`，会要求填写下面的四项私人访问配置。它是部署向导，不是已经运行的网站；需本人注册/登录Vercel、授权GitHub并完成部署。若向导不能识别分支，可按下文手动导入对应分支。
+
+固定网址由Vercel在部署成功后实际分配。首次部署后，到项目Settings → Git核对Production Branch是包含应用的分支；以后推送该分支才会更新同一个正式网址。不要把仅有PPT的旧main作为应用版本。先完成Supabase所有者身份与环境设置，保持`APP_PRIVATE_MODE=true`，再按文末步骤验证匿名拒绝和本人登录。仅部署成功、但登录配置缺失时，网站会返回503，不能当作可交付入口。
+
 ## 所需账号
 
 1. 在 `https://vercel.com/signup` 用自己的GitHub账号注册Vercel。账号创建和授权由本人完成；不在聊天中发送密码、验证码、令牌或登录Cookie。
