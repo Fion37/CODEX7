@@ -223,6 +223,22 @@ export function Dashboard() {
       <div className="dashboard-columns">
         <div className="dashboard-main">
           <Panel
+            title="今天，把词汇用到听力里"
+            subtitle="你的场景词、语境改写与个人资料已接入学习空间"
+          >
+            <p>
+              先练5个核对过的词，再做一组短小的雅思题型练习。自己的音频可逐句循环，首次答案与复听修正分别保存。
+            </p>
+            <div className="row wrap">
+              <Link className="button primary" href="/vocabulary">
+                开始场景词训练 <ArrowRight size={15} />
+              </Link>
+              <Link className="button secondary" href="/resources">
+                我的资料 · {state.resources.length}份
+              </Link>
+            </div>
+          </Panel>
+          <Panel
             title="今天的学习，从这里开始"
             subtitle="300 分钟净学习 · 五个可以踏实完成的时段"
             action={

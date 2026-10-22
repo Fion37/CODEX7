@@ -20,6 +20,14 @@ import {
 } from "./ui";
 import { localDate, uid, type SpeakingRecord } from "@/lib/model";
 import { getFeedback } from "@/lib/coach";
+import {
+  speakingTopics,
+  speakingModel,
+  speakingCriteria,
+  speakingFeedbackContext,
+} from "@/lib/speaking-topics";
+import type { SpeakingContext } from "@/lib/resource-model";
+import Link from "next/link";
 const speakingLessons = [
   {
     name: "单词与基础句型",
@@ -87,7 +95,32 @@ function SavedAudio({ record }: { record: SpeakingRecord }) {
 export function Speaking() {
   const { state, update } = useStudy();
   const level = state.levels.speaking;
-  const lesson = speakingLessons[level - 1];
+  const [topicId, setTopicId] = useState(
+    state.drafts["speaking-topic"] || "study",
+  );
+  const [part, setPart] = useState<SpeakingContext["part"]>(
+    ["1", "2", "3"].includes(state.drafts["speaking-part"])
+      ? (state.drafts["speaking-part"] as SpeakingContext["part"])
+      : "1",
+  );
+  const [mode, setMode] = useState<SpeakingContext["mode"]>("guided");
+  const [questionIndex, setQuestionIndex] = useState(
+    Number(state.drafts["speaking-question-index"]) || 0,
+  );
+  const [preparing, setPreparing] = useState(false);
+  const [prepRemaining, setPrepRemaining] = useState(60);
+  const [prepared, setPrepared] = useState(false);
+  const prepDeadline = useRef(0);
+  const topic =
+    speakingTopics.find((t) => t.id === topicId) || speakingTopics[0];
+  const questions =
+    part === "1" ? topic.part1 : part === "3" ? topic.part3 : [topic.cue];
+  const lesson = {
+    ...speakingLessons[level - 1],
+    question: questions[questionIndex % questions.length],
+    model: speakingModel(topic.id, part, questionIndex, level),
+    help: speakingCriteria[part],
+  };
   const transcript = state.drafts["speaking"] || "";
   const [recording, setRecording] = useState(false);
   const [duration, setDuration] = useState(
@@ -108,6 +141,7 @@ export function Speaking() {
   const startAt = useRef(0);
   const active = useRef(true);
   const urlRef = useRef("");
+  const promptAudio = useRef<HTMLAudioElement | null>(null);
   const record = state.speaking.find((r) => r.id === selected);
   const setTranscript = (text: string) =>
     update((s) => ({ ...s, drafts: { ...s.drafts, speaking: text } }));
@@ -134,8 +168,28 @@ export function Speaking() {
       speech.current?.abort();
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       window.speechSynthesis?.cancel();
+      promptAudio.current?.pause();
     };
   }, []);
+  useEffect(() => {
+    if (!preparing) return;
+    prepDeadline.current = Date.now() + prepRemaining * 1000;
+    const id = setInterval(() => {
+      const left = Math.max(
+        0,
+        Math.ceil((prepDeadline.current - Date.now()) / 1000),
+      );
+      setPrepRemaining(left);
+      if (!left) {
+        setPreparing(false);
+        setPrepared(true);
+        setNotice(
+          "1分钟准备结束。点击录音开始回答，最长2分钟；这是分部计时练习，不是官方整场评分。",
+        );
+      }
+    }, 250);
+    return () => clearInterval(id);
+  }, [preparing]);
   useEffect(() => {
     if (!recording) return;
     const id = setInterval(() => {
@@ -146,6 +200,12 @@ export function Speaking() {
     return () => clearInterval(id);
   }, [recording]);
   const begin = async () => {
+    if (mode === "exam" && part === "2" && !prepared) {
+      setNotice("Part 2计时练习先完成1分钟准备。");
+      return;
+    }
+    promptAudio.current?.pause();
+    window.speechSynthesis?.cancel();
     setNotice("");
     setAudioKey(undefined);
     try {
@@ -211,7 +271,7 @@ export function Speaking() {
         }
         const r = new Ctor();
         speech.current = r;
-        r.lang = "en-US";
+        r.lang = "en-GB";
         r.continuous = true;
         r.interimResults = false;
         let text = "";
@@ -236,25 +296,49 @@ export function Speaking() {
       );
     }
   };
-  const demo = () => {
-    if (!window.speechSynthesis) {
-      setNotice("当前浏览器不支持朗读，请阅读示范。");
+  const demo = async () => {
+    promptAudio.current?.pause();
+    window.speechSynthesis?.cancel();
+    const voice = window.speechSynthesis
+      ?.getVoices()
+      .find((v) => v.lang.toLowerCase() === "en-gb");
+    if (!voice) {
+      const audio = new Audio(
+        `/audio/speaking/${topic.id}-${part}-${questionIndex % questions.length}-model-${level <= 2 ? "basic" : "extended"}.mp3`,
+      );
+      promptAudio.current = audio;
+      try {
+        await audio.play();
+        setNotice(
+          "正在播放本站合成的起步示范。用自己的经历改写，不背整篇答案。",
+        );
+      } catch {
+        setNotice("示范音频暂不可用，可以先阅读示范句再录自己的回答。");
+      }
       return;
     }
-    speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(lesson.model);
     utterance.lang = "en-GB";
-    utterance.rate = 0.85;
+    utterance.voice = voice;
+    utterance.rate = mode === "exam" ? 1 : 0.9;
     speechSynthesis.speak(utterance);
   };
   const submit = async () => {
     if (!transcript.trim() || busy) return;
     setBusy(true);
+    const examContext: SpeakingContext = {
+      part,
+      topic: topic.title,
+      mode,
+      criterion: speakingCriteria[part],
+      ...(duration ? { duration } : {}),
+    };
     const result = await getFeedback(
       transcript,
       "speaking",
       level,
       lesson.question,
+      examContext,
     );
     const id = uid();
     update((s) => ({
@@ -269,7 +353,12 @@ export function Speaking() {
           transcript,
           duration,
           audioKey,
-          feedback: result.feedback,
+          feedback: speakingFeedbackContext(
+            result.feedback,
+            examContext,
+            transcript,
+          ),
+          examContext,
         },
       ],
     }));
@@ -277,18 +366,143 @@ export function Speaking() {
     setNotice(result.notice);
     setBusy(false);
   };
+  const changeQuestion = (
+    nextTopic: string,
+    nextPart: SpeakingContext["part"],
+    nextIndex: number,
+  ) => {
+    if (recording || busy) return;
+    if (
+      (transcript.trim() || audioKey) &&
+      !selected &&
+      !confirm(
+        "当前回答尚未提交。切换题目会清空当前草稿；已保存历史不受影响。继续吗？",
+      )
+    )
+      return;
+    setTopicId(nextTopic);
+    setPart(nextPart);
+    setQuestionIndex(nextIndex);
+    setSelected(undefined);
+    setPreparing(false);
+    setPrepared(false);
+    setPrepRemaining(60);
+    setDuration(0);
+    setAudioKey(undefined);
+    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    urlRef.current = "";
+    setUrl("");
+    promptAudio.current?.pause();
+    window.speechSynthesis?.cancel();
+    update((s) => ({
+      ...s,
+      drafts: {
+        ...s.drafts,
+        speaking: "",
+        "speaking-audio": "",
+        "speaking-duration": "0",
+        "speaking-topic": nextTopic,
+        "speaking-part": nextPart,
+        "speaking-question-index": String(nextIndex),
+      },
+    }));
+  };
+  const hearQuestion = async () => {
+    promptAudio.current?.pause();
+    window.speechSynthesis?.cancel();
+    const voice = window.speechSynthesis
+      ?.getVoices()
+      .find((v) => v.lang.toLowerCase() === "en-gb");
+    if (voice) {
+      const u = new SpeechSynthesisUtterance(lesson.question);
+      u.voice = voice;
+      u.rate = mode === "exam" ? 1 : 0.9;
+      speechSynthesis.speak(u);
+    } else {
+      const audio = new Audio(
+        `/audio/speaking/${topic.id}-${part}-${questionIndex % questions.length}.mp3`,
+      );
+      promptAudio.current = audio;
+      try {
+        await audio.play();
+      } catch {
+        setNotice(
+          "题目音频暂不可用，请阅读当前问题；没有把未播放的音频视为已听。",
+        );
+      }
+    }
+  };
   return (
     <>
       <PageTitle
         eyebrow="AI SPEAKING COACH"
         title="从说出一句，到表达自己。"
-        description="不用说得很长。每次只改最重要的1–3个问题，再录一次听听变化。"
+        description="按雅思Part 1、提示卡Part 2和讨论Part 3练表达。当前基础较弱时，先回答一句，再逐步扩展。"
         action={
           <Badge>
             Level {level} · {lesson.name}
           </Badge>
         }
       />
+      <div className="resource-filters">
+        <label className="field">
+          雅思话题
+          <select
+            aria-label="雅思口语话题"
+            value={topic.id}
+            disabled={recording || busy}
+            onChange={(e) => changeQuestion(e.target.value, part, 0)}
+          >
+            {speakingTopics.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field">
+          考试部分
+          <select
+            aria-label="雅思口语部分"
+            value={part}
+            disabled={recording || busy}
+            onChange={(e) =>
+              changeQuestion(
+                topic.id,
+                e.target.value as SpeakingContext["part"],
+                0,
+              )
+            }
+          >
+            <option value="1">Part 1 · 熟悉话题</option>
+            <option value="2">Part 2 · 提示卡长答</option>
+            <option value="3">Part 3 · 抽象讨论</option>
+          </select>
+        </label>
+        <label className="field">
+          训练方式
+          <select
+            aria-label="口语训练方式"
+            value={mode}
+            disabled={recording || busy || preparing}
+            onChange={(e) => {
+              setMode(e.target.value as SpeakingContext["mode"]);
+              setPrepared(false);
+              setPrepRemaining(60);
+            }}
+          >
+            <option value="guided">分步教学 · 可跟读与重练</option>
+            <option value="exam">分部计时 · 逐步接近考试</option>
+          </select>
+        </label>
+      </div>
+      <Notice>
+        正式口试约11–14分钟，Part 1与Part 3各约4–5分钟，Part
+        2有1分钟准备和1–2分钟回答。本页是原创题目的分部训练；基础阶段不强制完整模考。
+        {mode === "exam" && level < 3
+          ? "你当前仍在基础表达阶段，可以随时切回分步教学。"
+          : ""}
+      </Notice>
       <div className="coach-layout">
         <div>
           <Panel
@@ -318,6 +532,72 @@ export function Speaking() {
               <span>YOUR QUESTION</span>
               <h2>{lesson.question}</h2>
               <p>{lesson.help}</p>
+              {part === "2" && (
+                <ul className="cue-card">
+                  {topic.bullets.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+              )}
+              <div className="row wrap">
+                <button
+                  className="button secondary"
+                  disabled={recording}
+                  onClick={hearQuestion}
+                >
+                  <Volume2 size={16} />
+                  听考官式提问
+                </button>
+                <button
+                  className="text-link"
+                  disabled={recording || busy || preparing}
+                  onClick={() =>
+                    part === "2"
+                      ? changeQuestion(
+                          speakingTopics[
+                            (speakingTopics.indexOf(topic) + 1) %
+                              speakingTopics.length
+                          ].id,
+                          part,
+                          0,
+                        )
+                      : changeQuestion(topic.id, part, questionIndex + 1)
+                  }
+                >
+                  {part === "2" ? "换一张提示卡 →" : "换一道同话题问题 →"}
+                </button>
+              </div>
+              {part === "2" && (
+                <div className="timer-box">
+                  <strong>准备时间 {clock(prepRemaining)}</strong>
+                  <button
+                    className="button secondary"
+                    disabled={recording || preparing || prepared}
+                    onClick={() => {
+                      setPrepRemaining(60);
+                      setPreparing(true);
+                    }}
+                  >
+                    开始1分钟准备
+                  </button>
+                  <label className="field">
+                    关键词笔记
+                    <textarea
+                      aria-label="Part 2关键词笔记"
+                      value={state.drafts[`cue-notes-${topic.id}`] || ""}
+                      onChange={(e) =>
+                        update((s) => ({
+                          ...s,
+                          drafts: {
+                            ...s.drafts,
+                            [`cue-notes-${topic.id}`]: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+              )}
             </div>
             <div
               className={`recording-area ${recording ? "is-recording" : ""}`}
@@ -331,7 +611,11 @@ export function Speaking() {
                       recorder.current.stop()
                     : begin()
                 }
-                disabled={busy}
+                disabled={
+                  busy ||
+                  preparing ||
+                  (mode === "exam" && part === "2" && !prepared)
+                }
               >
                 {recording ? <Square size={27} /> : <Mic size={30} />}
               </button>
@@ -423,6 +707,13 @@ export function Speaking() {
               <li>跟读一次，再换成自己的原因。</li>
               <li>不看示范，重新录制。</li>
             </ol>
+            <Notice>
+              短口语优先用because、but、also、for
+              example自然展开；不强迫套用moreover等写作连接词。
+            </Notice>
+            <Link className="text-link" href="/vocabulary">
+              练习你资料中的连接表达 →
+            </Link>
           </Panel>
           <Panel
             title="前后对比 · 我的录音"
@@ -438,6 +729,8 @@ export function Speaking() {
                       <div className="row between">
                         <strong>
                           {r.date} · L{r.level}
+                          {r.examContext &&
+                            ` · Part ${r.examContext.part} · ${r.examContext.topic}`}
                         </strong>
                         <button
                           className="text-link"

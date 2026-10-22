@@ -14,6 +14,8 @@ test("首页与10个页面均可打开，没有客户端异常", async ({ page }
     "/speaking",
     "/reading",
     "/listening",
+    "/resources",
+    "/vocabulary",
     "/data",
     "/review",
     "/calendar",
@@ -141,6 +143,7 @@ test("阅读错误后解释、降低难度、迁移检测，保留首次答案",
 });
 test("听力播放真实音频，记录首次答案与复听条件", async ({ page }) => {
   await open(page, "/listening");
+  await page.getByRole("button", { name: "词汇与辨音微练习" }).click();
   await page.getByRole("button", { name: "首次播放", exact: true }).click();
   await expect(page.getByText("已播放 1 次")).toBeVisible();
   await page.getByLabel("听力答案").fill("9:30");

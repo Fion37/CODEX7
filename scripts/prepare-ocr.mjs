@@ -21,3 +21,9 @@ await copyFile(
   path.join(target, "eng.traineddata.gz"),
 );
 console.log("Self-hosted OCR worker, WASM and English language data prepared.");
+await mkdir("public/pdf", { recursive: true });
+await copyFile(
+  require.resolve("pdfjs-dist/legacy/build/pdf.worker.min.mjs"),
+  "public/pdf/pdf.worker.min.mjs",
+);
+console.log("Self-hosted PDF text worker prepared.");

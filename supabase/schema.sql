@@ -30,7 +30,7 @@ $$;
 revoke all on function public.save_learning_state(jsonb,bigint) from public, anon;
 grant execute on function public.save_learning_state(jsonb,bigint) to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values('study-private','study-private',false,15728640,array['audio/webm','audio/webm;codecs=opus','audio/ogg','audio/ogg;codecs=opus','audio/mp4','audio/wav','image/png','image/jpeg','image/webp'])
+values('study-private','study-private',false,15728640,array['audio/webm','audio/webm;codecs=opus','audio/ogg','audio/ogg;codecs=opus','audio/mp4','audio/wav','audio/mpeg','application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/json','text/plain','text/csv','image/png','image/jpeg','image/webp'])
 on conflict(id) do nothing;
 create policy "owner reads assets" on storage.objects for select to authenticated using (bucket_id='study-private' and (storage.foldername(name))[1]=(select auth.uid())::text);
 create policy "owner uploads assets" on storage.objects for insert to authenticated with check (bucket_id='study-private' and (storage.foldername(name))[1]=(select auth.uid())::text);

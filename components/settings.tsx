@@ -20,6 +20,7 @@ import {
 import { PageTitle, Panel, Badge, Notice, Modal, download } from "./ui";
 import { cloudConfigured, getSupabase } from "@/lib/supabase";
 import { modes, recommendMode, type Mode, type StudyState } from "@/lib/model";
+import { isAllowedAssetMime } from "@/lib/asset-mime";
 import { stateSchema } from "@/lib/validation";
 function encode(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -133,8 +134,8 @@ export function Settings() {
       );
       setNotice(
         missing.length
-          ? `文本已导出，但此设备缺少 ${missing.length} 个录音/截图；请先恢复云端附件，再做完整备份。`
-          : "已导出全部本机学习记录和可用录音/截图，请妥善保存。",
+          ? `文本已导出，但此设备缺少 ${missing.length} 个录音、截图或资料；请先恢复云端附件，再做完整备份。`
+          : "已导出全部本机学习记录和可用录音、截图或资料，请妥善保存。",
       );
     } catch {
       setNotice("导出失败，可能是浏览器内存或存储不可用。");
@@ -160,9 +161,7 @@ export function Settings() {
         if (
           !/^[\w-]{1,100}$/.test(key) ||
           typeof asset.base64 !== "string" ||
-          !/^(audio\/(webm|ogg|mp4|wav)(;codecs=[\w-]+)?|image\/(png|jpeg|webp))$/.test(
-            asset.type,
-          )
+          !isAllowedAssetMime(asset.type)
         )
           throw new Error("备份附件格式无效。");
         blobs.push({ key, blob: decode(asset.base64, asset.type) });
@@ -542,7 +541,7 @@ export function Settings() {
         <div>
           <Panel title="导出与恢复">
             <p>
-              完整备份包括学习任务、作文、反馈、错题、练习记录，以及此设备可用的录音和截图。
+              完整备份包括学习任务、作文、反馈、错题、练习记录，以及此设备可用的录音、截图、私人资源原文件及提取文本。
             </p>
             <div className="stack">
               <button
@@ -644,7 +643,9 @@ export function Settings() {
           title="删除前，请确认已经备份"
           onClose={() => setDeleting(false)}
         >
-          <p>这会删除任务、作文、反馈、录音、导入截图和练习记录，无法撤销。</p>
+          <p>
+            这会删除任务、作文、反馈、录音、私人资源、导入截图和练习记录，无法撤销。
+          </p>
           {user && (
             <label className="checkbox-label">
               <input

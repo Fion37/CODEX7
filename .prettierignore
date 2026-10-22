@@ -1,6 +1,7 @@
 .next
 node_modules
 public/ocr
+public/pdf
 public/audio
 test-results
 playwright-report

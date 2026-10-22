@@ -1,0 +1,218 @@
+import type { ListeningSet } from "./resource-model";
+export const listeningSets: ListeningSet[] = [
+  {
+    id: "ielts-rental",
+    title: "Part 1 · 租房咨询表格",
+    part: 1,
+    topic: "住宿、租金、日期与拼写",
+    origin: "original",
+    answerKeyConfirmed: true,
+    audioPath: "/audio/ielts/ielts-rental.mp3",
+    transcript:
+      "Agent: Good morning. How can I help you?\nStudent: I am looking for a room near the university.\nAgent: We have a room at eighteen Willow Road. The monthly rent is six hundred and fifty pounds.\nStudent: Does that include electricity?\nAgent: No, but water is included.\nStudent: I thought the deposit was six hundred pounds.\nAgent: That was last year. The deposit is five hundred pounds now.\nStudent: Could I move in on Friday?\nAgent: The room will be ready on Monday. The kitchen has a dishwasher.\nStudent: That sounds useful. I will bring my passport.",
+    questions: [
+      {
+        id: "rent",
+        prompt: "Monthly rent: £_____",
+        answers: ["650"],
+        wordLimit: 1,
+        type: "form",
+        evidence: "The monthly rent is six hundred and fifty pounds.",
+        paraphrase: "monthly rent 对应 monthly rent；数字需写成650。",
+      },
+      {
+        id: "included",
+        prompt: "The rent includes: _____",
+        answers: ["water"],
+        wordLimit: 1,
+        type: "form",
+        evidence: "No, but water is included.",
+        paraphrase:
+          "Does that include electricity? 是干扰提问，后续否定并更正为water。",
+      },
+      {
+        id: "deposit",
+        prompt: "Current deposit: £_____",
+        answers: ["500"],
+        wordLimit: 1,
+        type: "form",
+        evidence: "That was last year. The deposit is five hundred pounds now.",
+        paraphrase: "current 对应 now；600是过去的信息，需跟上更正。",
+      },
+      {
+        id: "move",
+        prompt: "Move-in day: _____",
+        answers: ["Monday"],
+        wordLimit: 1,
+        type: "form",
+        evidence: "The room will be ready on Monday.",
+        paraphrase: "move in 对应 be ready；Friday是学生期望，不是最终确认。",
+      },
+      {
+        id: "appliance",
+        prompt: "Kitchen equipment: _____",
+        answers: ["dishwasher"],
+        wordLimit: 1,
+        type: "form",
+        evidence: "The kitchen has a dishwasher.",
+        paraphrase: "equipment 对应厨房中已有的设备，注意词形与拼写。",
+      },
+    ],
+  },
+  {
+    id: "ielts-centre",
+    title: "Part 2 · 社区中心地图与选择",
+    part: 2,
+    topic: "方位、地图与信息筛选",
+    origin: "original",
+    answerKeyConfirmed: true,
+    audioPath: "/audio/ielts/ielts-centre.mp3",
+    transcript:
+      "Welcome to the new community centre. On the map, north is at the top and reception is in the middle. The library is in the north-west corner. The yoga room is in the south-east corner. The meeting room is in the north-east corner. Our beginner fitness class is on Tuesday, not Thursday. You can reserve a place online. Please book ahead of time because the class is popular.",
+    questions: [
+      {
+        id: "library-map",
+        prompt: "Which room on the map is the library?",
+        answers: ["A"],
+        wordLimit: 1,
+        type: "map",
+        choices: ["A", "B", "C", "D"],
+        evidence: "The library is in the north-west corner.",
+        paraphrase:
+          "north-west 对应地图左上角A，不要把听到的方向当成行走者的左右。",
+      },
+      {
+        id: "yoga-map",
+        prompt: "Which room on the map is the yoga room?",
+        answers: ["D"],
+        wordLimit: 1,
+        type: "map",
+        choices: ["A", "B", "C", "D"],
+        evidence: "The yoga room is in the south-east corner.",
+        paraphrase: "south-east 对应地图右下角D。",
+      },
+      {
+        id: "fitness-day",
+        prompt: "When is the beginner fitness class?",
+        answers: ["B"],
+        wordLimit: 1,
+        type: "multiple-choice",
+        choices: ["A. Monday", "B. Tuesday", "C. Thursday"],
+        evidence: "Our beginner fitness class is on Tuesday, not Thursday.",
+        paraphrase: "not Thursday 排除干扰选项；最终明确为Tuesday。",
+      },
+      {
+        id: "booking",
+        prompt: "Visitors should book _____ time.",
+        answers: ["ahead of"],
+        wordLimit: 2,
+        type: "note",
+        evidence: "Please book ahead of time because the class is popular.",
+        paraphrase:
+          "ahead of time 与 in advance 表示提前；本题已有time，只填ahead of。",
+      },
+    ],
+  },
+  {
+    id: "ielts-project",
+    title: "Part 3 · 学生研究讨论",
+    part: 3,
+    topic: "研究方法、作业讨论与观点归属",
+    origin: "original",
+    answerKeyConfirmed: true,
+    audioPath: "/audio/ielts/ielts-project.mp3",
+    transcript:
+      "Maya: I was going to interview local residents for our project.\nTutor: Interviews can give detail, but you only have two weeks. A questionnaire would let you contact more people.\nMaya: I agree. We will use a questionnaire instead of interviews.\nLeo: I can collect the responses, but Maya is better at statistics.\nMaya: Then I will analyse the results. When is the deadline?\nTutor: Please hand in your report on Wednesday. The presentation will take place the following week.",
+    questions: [
+      {
+        id: "method",
+        prompt: "Which research method do the students finally choose?",
+        answers: ["B"],
+        wordLimit: 1,
+        type: "multiple-choice",
+        choices: [
+          "A. Interviews",
+          "B. A questionnaire",
+          "C. Direct observation",
+        ],
+        evidence: "We will use a questionnaire instead of interviews.",
+        paraphrase:
+          "finally choose 需要追踪决定；instead of 标记放弃早先的访谈计划。",
+      },
+      {
+        id: "analysis",
+        prompt: "Who will analyse the results?",
+        answers: ["A"],
+        wordLimit: 1,
+        type: "matching",
+        choices: ["A. Maya", "B. Leo", "C. The tutor"],
+        evidence: "Maya: Then I will analyse the results.",
+        paraphrase:
+          "collect responses 不等于 analyse results；需要分清人物职责。",
+      },
+      {
+        id: "deadline",
+        prompt: "The report must be submitted on _____.",
+        answers: ["Wednesday"],
+        wordLimit: 1,
+        type: "note",
+        evidence: "Please hand in your report on Wednesday.",
+        paraphrase:
+          "submit 对应 hand in；deadline指报告，不是下周的presentation。",
+      },
+    ],
+  },
+  {
+    id: "ielts-habitat",
+    title: "Part 4 · 栖息地保护讲座笔记",
+    part: 4,
+    topic: "学术场景、词性预测与笔记填空",
+    origin: "original",
+    answerKeyConfirmed: true,
+    audioPath: "/audio/ielts/ielts-habitat.mp3",
+    transcript:
+      "Today we will consider the conservation of wetlands. Wetlands provide habitats for many species of birds and insects. Researchers often use a questionnaire to learn about local attitudes, but they also collect water samples. One serious problem is pollution from nearby farms. A successful conservation plan requires long-term monitoring. Local residents can help by recording changes in bird populations.",
+    questions: [
+      {
+        id: "habitats",
+        prompt: "Wetlands provide _____ for many species.",
+        answers: ["habitats"],
+        wordLimit: 1,
+        type: "note",
+        evidence:
+          "Wetlands provide habitats for many species of birds and insects.",
+        paraphrase:
+          "provide后预测名词；habitats为复数，不因为听懂词意就忽略词尾。",
+      },
+      {
+        id: "samples",
+        prompt: "Researchers collect water _____.",
+        answers: ["samples"],
+        wordLimit: 1,
+        type: "note",
+        evidence: "They also collect water samples.",
+        paraphrase: "water作定语，后面填samples；问卷是另一项活动的干扰信息。",
+      },
+      {
+        id: "pollution",
+        prompt: "A major problem comes from farm _____.",
+        answers: ["pollution"],
+        wordLimit: 1,
+        type: "note",
+        evidence: "One serious problem is pollution from nearby farms.",
+        paraphrase:
+          "major 对应 serious，来自农场的污染对应 pollution from nearby farms。",
+      },
+      {
+        id: "monitoring",
+        prompt: "The plan needs long-term _____.",
+        answers: ["monitoring"],
+        wordLimit: 1,
+        type: "note",
+        evidence:
+          "A successful conservation plan requires long-term monitoring.",
+        paraphrase: "needs 对应 requires；long-term 后用名词monitoring。",
+      },
+    ],
+  },
+];

@@ -181,12 +181,20 @@ export function Report() {
     (r) => r.date >= begin && r.date <= end,
   );
   const errors = state.errors.filter((r) => r.date >= begin && r.date <= end);
+  const vocabulary = state.vocabularyAttempts.filter(
+    (r) => r.date >= begin && r.date <= end,
+  );
+  const listeningSessions = state.listeningSessions.filter(
+    (r) => r.date >= begin && r.date <= end,
+  );
   const minutes = Math.floor(tasks.reduce((s, t) => s + t.seconds, 0) / 60);
   const hasData =
     writing.length +
       speaking.length +
       practices.length +
       errors.length +
+      vocabulary.length +
+      listeningSessions.length +
       minutes >
     0;
   const causes = errors.reduce<Record<string, number>>(
@@ -206,6 +214,20 @@ export function Report() {
     ).length,
     speakingSubmissions: speaking.length,
     practiceRecords: practices.length,
+    vocabularyAttempts: vocabulary.length,
+    vocabularyWithoutHints: vocabulary.filter(
+      (v) => v.correct && !v.revealed && v.plays === 1 && v.mode !== "usage",
+    ).length,
+    listeningStudyAttempts: listeningSessions.length,
+    listeningUninterruptedFirstAttempts: listeningSessions.filter(
+      (s) =>
+        s.firstAttempt &&
+        s.mode === "once" &&
+        s.plays === 1 &&
+        !s.paused &&
+        !s.seeked &&
+        !s.transcriptViewed,
+    ).length,
     errorCategories: causes,
     recommendedMode: modes[recommendMode(state)],
     reading: practiceStats(practices, "reading"),
@@ -289,6 +311,16 @@ export function Report() {
                 <p>
                   其中 {report.independentRewrites}{" "}
                   次有独立重写记录。优先比较同一等级的原稿与重写，不能用练习次数代替掌握程度。
+                </p>
+              )}
+              {(vocabulary.length > 0 || listeningSessions.length > 0) && (
+                <p>
+                  场景词与改写共尝试{vocabulary.length}次，其中
+                  {report.vocabularyWithoutHints}
+                  次在一次播放、未看提示的条件下答对；听力专项
+                  {listeningSessions.length}次，其中
+                  {report.listeningUninterruptedFirstAttempts}
+                  次符合首次不中断单播条件。这些是专项练习证据，不能换算正式雅思分数。
                 </p>
               )}
               {(["reading", "listening"] as const).map((s) => (

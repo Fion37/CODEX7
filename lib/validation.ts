@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  resourceSchema,
+  vocabularyAttemptSchema,
+  listeningSessionSchema,
+  speakingContextSchema,
+  listeningContextSchema,
+} from "./resource-validation";
 const date = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -53,10 +60,12 @@ export const feedbackSchema = z.object({
   meetsCriteria: z.boolean(),
 });
 export const aiRequestSchema = z.object({
-  subject: z.enum(["writing", "speaking"]),
+  subject: z.enum(["writing", "speaking", "listening"]),
   level: z.number().int().min(1).max(5),
   text: z.string().trim().min(1).max(15000),
   prompt: z.string().max(2000),
+  examContext: speakingContextSchema.optional(),
+  listeningContext: listeningContextSchema.optional(),
 });
 const subject = z.enum([
   "writing",
@@ -129,6 +138,7 @@ export const stateSchema = z.object({
       audioKey: z.string().optional(),
       mime: z.string().optional(),
       feedback,
+      examContext: speakingContextSchema.optional(),
     }),
   ),
   errors: z.array(
@@ -172,6 +182,18 @@ export const stateSchema = z.object({
     }),
   ),
   drafts: z.record(z.string(), z.string()).default({}),
+  resources: z.array(resourceSchema).max(1000).default([]),
+  vocabularyAttempts: z.array(vocabularyAttemptSchema).default([]),
+  listeningSessions: z.array(listeningSessionSchema).default([]),
+  vocabularyOverrides: z
+    .record(
+      z.string(),
+      z.object({
+        status: z.enum(["checked", "review"]),
+        meaning: z.string().max(500),
+      }),
+    )
+    .default({}),
   levels: z.object({
     writing: z.number().int().min(1).max(5),
     speaking: z.number().int().min(1).max(5),

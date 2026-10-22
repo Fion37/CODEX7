@@ -20,6 +20,8 @@ import {
   ChevronRight,
   Pause,
   NotebookPen,
+  LibraryBig,
+  Languages,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useStudy } from "./store";
@@ -33,6 +35,8 @@ export const navigation = [
   { href: "/reading", label: "AI 阅读教师", icon: BookOpen },
   { href: "/listening", label: "AI 听力教师", icon: Headphones },
   { href: "/data", label: "爱听写数据中心", icon: Database },
+  { href: "/resources", label: "我的学习资源", icon: LibraryBig },
+  { href: "/vocabulary", label: "场景词与改写", icon: Languages },
   { href: "/review", label: "错题与词汇复习", icon: NotebookPen },
   { href: "/calendar", label: "70天学习路径", icon: CalendarDays },
   { href: "/report", label: "每周学习报告", icon: ChartNoAxesCombined },

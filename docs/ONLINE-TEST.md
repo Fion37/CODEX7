@@ -20,6 +20,8 @@ https://github.com/codespaces/new?repo=1429534346&ref=codex%2Fielts-study-os-v1
 
 还可以测试录音、原创听力音频、阅读小题、截图OCR、CSV/XLSX导入，以及完整备份导出恢复。真实AI和云同步没有配置时不会伪装成已连接；基础测试不需要密钥。
 
+新版增加“我的学习资源”“场景词与改写”、Part 1–4听力专项和按Part区分的口语训练，操作见 [个人资料使用说明](PERSONAL-RESOURCES.md)。如果恢复的是旧Codespace，先在设置导出学习备份，再在终端执行`git pull --ff-only`、`bash .devcontainer/setup.sh`，停止旧开发服务后重新执行`node .devcontainer/start.mjs`；也可使用Codespaces的Rebuild Container重新应用安装步骤。更新只提供新的功能，未自动导入用户电脑中的原始文件。
+
 ## 隐私、费用和停止
 
 - 这个测试环境由GitHub的Private端口认证保护。应用使用开发模式，不重复要求Supabase登录。此启动脚本只用于本机/Codespaces测试，正式公网部署仍使用网站所有者登录限制。

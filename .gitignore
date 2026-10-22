@@ -5,6 +5,7 @@ out/
 .env*
 !.env.example
 public/ocr/
+public/pdf/
 playwright-report/
 test-results/
 coverage/

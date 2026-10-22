@@ -2,7 +2,10 @@ import { notFound } from "next/navigation";
 import { Today } from "@/components/today";
 import { Writing } from "@/components/writing";
 import { Speaking } from "@/components/speaking";
-import { Reading, Listening } from "@/components/drills";
+import { Reading } from "@/components/drills";
+import { ListeningCoach } from "@/components/listening";
+import { Resources } from "@/components/resources";
+import { Vocabulary } from "@/components/vocabulary";
 import { DataCenter } from "@/components/data-center";
 import { Review } from "@/components/review";
 import { Calendar, Report } from "@/components/progress";
@@ -18,7 +21,9 @@ export default async function Page({
     writing: <Writing />,
     speaking: <Speaking />,
     reading: <Reading />,
-    listening: <Listening />,
+    listening: <ListeningCoach />,
+    resources: <Resources />,
+    vocabulary: <Vocabulary />,
     data: <DataCenter />,
     review: <Review />,
     calendar: <Calendar />,

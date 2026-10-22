@@ -1,0 +1,2 @@
+-- Existing installations: run in your own Supabase SQL editor. Retains private bucket and owner policies.
+update storage.buckets set allowed_mime_types=array['audio/webm','audio/webm;codecs=opus','audio/ogg','audio/ogg;codecs=opus','audio/mp4','audio/wav','audio/mpeg','application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/json','text/plain','text/csv','image/png','image/jpeg','image/webp'] where id='study-private';

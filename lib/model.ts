@@ -1,3 +1,9 @@
+import type {
+  LearningResource,
+  VocabularyAttempt,
+  ListeningSession,
+  SpeakingContext,
+} from "./resource-model";
 export type Subject =
   | "writing"
   | "listening"
@@ -78,6 +84,7 @@ export interface SpeakingRecord {
   audioKey?: string;
   mime?: string;
   feedback: Feedback;
+  examContext?: SpeakingContext;
 }
 export type ErrorCategory =
   | "听辨"
@@ -151,6 +158,13 @@ export interface StudyState {
   practices: PracticeRecord[];
   drills: DrillRecord[];
   drafts: Record<string, string>;
+  resources: LearningResource[];
+  vocabularyAttempts: VocabularyAttempt[];
+  listeningSessions: ListeningSession[];
+  vocabularyOverrides: Record<
+    string,
+    { status: "checked" | "review"; meaning: string }
+  >;
   levels: { writing: number; speaking: number };
   updatedAt: string;
 }
@@ -191,6 +205,10 @@ export function initialState(): StudyState {
     practices: [],
     drills: [],
     drafts: {},
+    resources: [],
+    vocabularyAttempts: [],
+    listeningSessions: [],
+    vocabularyOverrides: {},
     levels: { writing: 1, speaking: 1 },
     updatedAt: new Date().toISOString(),
   };
@@ -347,14 +365,21 @@ const templates: Record<
   listening: {
     title: "让认识的单词，成为听得出的单词",
     goal: "分清听辨、拼写与定位困难，保留首次作答证据。",
-    material: "本站原创语音小练习；可另行使用你合法获得的音频",
+    material: "你的何琼场景词与改写索引；原创Part 1–4专项；本人主动导入的音频",
     instruction:
       "第一次完整听，不暂停，先作答。再逐句回听，比较声音与文字。只在第二次之后看讲解。",
     example: "The class starts at nine thirty. → 注意 starts at 的衔接。",
     exercise: "在听力教师页记录首次答案，回听并标注一个没听出的词。",
-    criterion: "完成2个短句听辨；记录播放次数及一个错因。",
+    criterion:
+      "完成5个到期/新词与1组适合当前水平的小题；保留首次答案和至少1处错因，不要求整套。",
     next: "连续漏听则缩短到一个词组；再用不同句子检查迁移。",
-    steps: ["首次听音并作答", "逐句精听", "辨音与拼写", "同义替换", "换句复测"],
+    steps: [
+      "听写5个核对过的场景词",
+      "首次听音并作答",
+      "逐句精听与定位",
+      "在语境中理解改写",
+      "换句复测并记录错因",
+    ],
   },
   reading: {
     title: "慢一点，读懂句子真正说了什么",
@@ -377,7 +402,8 @@ const templates: Record<
   speaking: {
     title: "把熟悉的词，说成自己的回答",
     goal: "用完整句回答一个日常问题。",
-    material: "本站原创：Do you enjoy learning English?；口语教师 Level 1",
+    material:
+      "原创雅思Part 1熟悉话题；你的连接与基础表达索引；口语教师 Level 1",
     instruction:
       "先学 I enjoy ... because ...，录制一个短回答，听回放，只改1–3个关键问题。再录一次比较。",
     example: "I enjoy learning English because I can meet new people.",
@@ -421,6 +447,13 @@ export function generateTasks(state: StudyState, date: string): Task[] {
           ? state.levels.speaking
           : 1;
     const template = { ...templates[subject] };
+    if (subject === "listening") {
+      const audio = state.resources.find((r) => r.kind === "audio");
+      const wrong = state.vocabularyAttempts.filter(
+        (a) => !a.correct && a.date <= date,
+      ).length;
+      template.exercise = `${wrong ? "先复练最近未掌握的词，再" : "先练5个已核对词，再"}完成1组短小的Part 1场景题；记录首次答案、回放次数与修正。${audio ? "可优先使用自己的音频：" + audio.name + "，每次只精听一个片段。" : "需要原声练习时，去资源中心选择自己有权使用的音频。"}`;
+    }
     if (level === 2 && subject === "writing") {
       template.title = "给句子增加场景与原因";
       template.exercise =

@@ -24,6 +24,9 @@ export async function saveAsset(key: string, blob: Blob) {
 export async function loadAsset(key: string): Promise<Blob | undefined> {
   return get(ASSET_PREFIX + key);
 }
+export async function deleteAsset(key: string) {
+  await del(ASSET_PREFIX + key);
+}
 export function assetRefs(state: StudyState) {
   return [
     ...new Set([
@@ -31,6 +34,10 @@ export function assetRefs(state: StudyState) {
       ...state.practices.flatMap((r) =>
         r.attachmentKey ? [r.attachmentKey] : [],
       ),
+      ...state.resources.flatMap((r) => [
+        r.assetKey,
+        ...(r.textKey ? [r.textKey] : []),
+      ]),
       ...(state.drafts["speaking-audio"]
         ? [state.drafts["speaking-audio"]]
         : []),
