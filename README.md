@@ -2,6 +2,10 @@
 
 一个可以立即开始造句、录音、精读、听辨、计时和复练的中文个人雅思学习网站。默认是诚实的本地教学模式，不需要付费AI或云端账号即可使用。
 
+## 不安装软件，先在线测试
+
+[打开GitHub在线测试环境](https://github.com/codespaces/new?repo=1429534346&ref=codex%2Fielts-study-os-v1)，用自己的GitHub账号登录，点击Create codespace，等待自动安装并启动。没有自动弹出网站时，在Ports面板点击3000端口的浏览器图标。保持端口为Private，不要公开共享。此链接是创建/恢复入口，实际网站地址由GitHub在环境就绪后生成。会使用你的Codespaces额度，结束后请停止环境。详见 [docs/ONLINE-TEST.md](docs/ONLINE-TEST.md)。
+
 ## 运行
 
 需要 Node.js 22.12+（当前验证环境 Node 24）。在仓库根目录：

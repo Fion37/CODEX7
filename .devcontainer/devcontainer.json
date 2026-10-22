@@ -1,0 +1,21 @@
+{
+  "name": "IELTS Study OS · 在线测试",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:5.2.3-24-bookworm",
+  "remoteUser": "node",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "IELTS Study OS · 私人测试网站",
+      "onAutoForward": "openBrowser",
+      "protocol": "http"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "node .devcontainer/start.mjs",
+  "waitFor": "postCreateCommand",
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["docs/ONLINE-TEST.md"]
+    }
+  }
+}
