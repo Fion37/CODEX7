@@ -1,0 +1,10 @@
+.next
+node_modules
+public/ocr
+public/audio
+test-results
+playwright-report
+tests/fixtures
+package-lock.json
+next-env.d.ts
+.env.example
